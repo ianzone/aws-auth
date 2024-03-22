@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { SignupService } from './signup.service';
 import { SignupController } from './signup.controller';
+import { SignupService } from './signup.service';
 
 @Module({
   controllers: [SignupController],

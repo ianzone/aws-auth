@@ -1,11 +1,10 @@
 import {
   CognitoIdentityProviderClient,
-  CognitoIdentityProviderServiceException,
   SignUpCommand,
 } from '@aws-sdk/client-cognito-identity-provider';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { makeError } from 'src/utils';
+import { handleCognitoError } from 'src/utils';
 import { SignUpDto } from './dto/sign-up.dto';
 
 const client = new CognitoIdentityProviderClient();
@@ -22,13 +21,9 @@ export class SignupService {
       Password: body.password, // required
     });
     try {
-      const res = await client.send(command);
-      return res;
+      return await client.send(command);
     } catch (err) {
-      if (err instanceof CognitoIdentityProviderServiceException) {
-        throw makeError(err.$response?.statusCode || 500, err.message);
-      }
-      throw err;
+      handleCognitoError(err);
     }
   }
 }

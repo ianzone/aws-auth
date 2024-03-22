@@ -1,3 +1,4 @@
+import { CognitoIdentityProviderServiceException } from '@aws-sdk/client-cognito-identity-provider';
 import {
   BadGatewayException,
   BadRequestException,
@@ -69,4 +70,11 @@ export function makeError(statusCode: number | string, message?: string): HttpEx
     default:
       throw new InternalServerErrorException(message);
   }
+}
+
+export function handleCognitoError(err: any) {
+  if (err instanceof CognitoIdentityProviderServiceException) {
+    throw makeError(err.$response?.statusCode || 500, err.message);
+  }
+  throw err;
 }
