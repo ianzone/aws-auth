@@ -1,20 +1,25 @@
-import type { INestApplication } from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { makeDocs } from 'src/utils';
 import { AppModule } from './app.module';
 
-function setSwagger(app: INestApplication) {
-  const config = new DocumentBuilder()
-    .setTitle('Demo API')
-    .setDescription('The cats API description')
-    .setVersion('1.0')
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, document);
-}
-
 export async function createApp() {
-  const app = await NestFactory.create(AppModule);
-  setSwagger(app);
+  const isDev = process.env.NODE_ENV === 'dev';
+  const app = await NestFactory.create(AppModule, {
+    logger: isDev ? undefined : console,
+  });
+  app.useGlobalPipes(
+    // https://docs.nestjs.com/techniques/validation#using-the-built-in-validationpipe
+    new ValidationPipe({
+      whitelist: true, // strips away any properties that do not have any decorators in DTO
+      forbidNonWhitelisted: true, // if a property is not in the DTO, throw an error
+      transform: true,
+      transformOptions: {
+        enableImplicitConversion: true,
+        exposeUnsetFields: false, // remove undefined properties
+      },
+    }),
+  );
+  makeDocs(app);
   return app;
 }
